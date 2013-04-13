@@ -10,7 +10,7 @@ module Net
 
     class Listen < EM::Connection
 
-      def hexy( str )
+      def hexy(str)
         puts Hexy.new(str).to_s
       end
 
@@ -19,16 +19,18 @@ module Net
           @buffer.slice!(0...8)
           handshake_clientname
         else
-          puts "not ssh, closing conn"
+          puts "Refusing non-SSH connection."
           bye
         end
       end
 
       def handshake_clientname
         @state = :handshake_clientname
-        if (offset = @buffer.index("\r\n"))
-          @client_name = @buffer.slice!(0...offset).strip
-          puts "client_name: %s" % [@client_name]
+
+        offset = @buffer.index("\r\n")
+        if offset
+          client_name = @buffer.slice!(0...offset).strip
+          puts "client_name: %s" % client_name
           handshake_header
         end
       end
@@ -49,7 +51,7 @@ module Net
         random_padding = @buffer.slice!(0..n2)
         # random_padding2 = @payload.slice!(0..(n2-3))
 
-        puts "-"*80
+        puts "-" * 80
         puts "packet length: #{@payload.bytesize} vs #{n1}"
         puts "padding length: #{random_padding.bytesize} vs #{n2}"
         puts "payload:"
@@ -79,14 +81,16 @@ module Net
 
       def post_init
         @buffer, @state = "", :post_init
-        send_data( PROTO_VERSION + "\r\n" )
-        EM.add_timer(1.5){
+        send_data(PROTO_VERSION + "\r\n")
+        EM.add_timer(1.5) do
           bye if [:post_init, :handshake_clientname].include?(@state)
-        }
+        end
       end
 
-      def bye( delay_ms=0 )
-        EM.add_timer(delay_ms/1000.0){ close_connection_after_writing }
+      def bye(delay_ms = 0)
+        EM.add_timer(delay_ms/1000.0) do
+          close_connection_after_writing
+        end
       end
 
       def receive_data(data)
