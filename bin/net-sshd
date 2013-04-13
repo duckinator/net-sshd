@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path('../../lib', __FILE__)
+require 'net/sshd'
+require 'optparse'
+
+options = {
+  host: '127.0.0.1',
+  port: 8022,
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: net-sshd [options]"
+
+  opts.on("-o", "--host HOST", "listen on HOST (default: #{options[:host]})") do
+    options[:host]
+  end
+
+  opts.on("-p", "--port PORT", "use PORT (default: #{options[:port]})") do
+    options[:port]
+  end
+end
+
+EM.run do
+  Net::SSHD.start('127.0.0.1', 8022)
+end
+

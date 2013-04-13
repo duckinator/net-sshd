@@ -1,3 +1,4 @@
+require 'net/sshd/version'
 require 'net/ssh'
 require 'eventmachine'
 require 'hexy'
@@ -101,9 +102,3 @@ module Net
   end
 end
 
-
-if $0 == __FILE__
-  EM.run do
-    Net::SSHD.start('127.0.0.1', 8022)
-  end
-end
