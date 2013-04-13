@@ -19,9 +19,18 @@ References:
  - SSH Connection Layer RFC: http://www.ietf.org/rfc/rfc4254.txt
  - SSH Authentication Procotol RFC: http://www.ietf.org/rfc/rfc4252.txt
 
+To test the library:
+
+    irb -Ilib -rnet/sshd
+
+To test the sshd:
+
+    ruby -Ilib ./bin/net-sshd
+
 Testing:
- ruby test/test.rb
- ssh localhost -p 8022
+
+   ruby test/test.rb
+   ssh localhost -p 8022
 
 ## Installation
 
