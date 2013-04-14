@@ -18,56 +18,11 @@ module Net
         @kex    = nil
 
         super(*args)
-
-        puts 'New connection'
-        send_line(PROTO_VERSION)
+        Callbacks.handle(self, nil, :connect)
       end
 
       def _random_string(length)
         SecureRandom.random_bytes(length)
-      end
-
-      def kexinit
-        @kex = {
-          cookie:       _random_string(16),
-          kexAlgs:      ['diffie-hellman-group-exchange-sha256'],
-          hostKeyAlgs:  ['ssh-rsa'],
-          encAlgs:      {
-                          client2server: ['aes128-ctr'],
-                          server2client: ['aes128-ctr'],
-                        },
-          macAlgs:      {
-                          client2server: ['hmac-md5'],
-                          server2client: ['hmac-md5'],
-                        },
-          cprAlgs:      {
-                          client2server: ['none'],
-                          server2client: ['none'],
-                        },
-          langs:        {
-                          client2server: [],
-                          server2client: [],
-                        },
-          firstKexFollows: false,
-        }
-
-        buffer =  Net::SSH::Buffer.from(
-                    :byte,       MSG::KEXINIT,
-                    :raw,        @kex[:cookie],
-                    :string,     @kex[:kexAlgs],
-                    :string,     @kex[:hostKeyAlgs],
-                    :string,     @kex[:encAlgs][:client2server].join(','),
-                    :string,     @kex[:encAlgs][:server2client].join(','),
-                    :string,     @kex[:macAlgs][:client2server].join(','),
-                    :string,     @kex[:macAlgs][:server2client].join(','),
-                    :string,     @kex[:cprAlgs][:client2server].join(','),
-                    :string,     @kex[:cprAlgs][:server2client].join(','),
-                    :string,     @kex[:langs][:client2server].join(','),
-                    :string,     @kex[:langs][:server2client].join(','),
-                    :bool,       @kex[:firstKexFollows],
-                    :long,       0, # Reserved (supposed to be 0)
-                  )
-        send_payload(buffer.content)
       end
 
       def send_line(str)
@@ -100,7 +55,6 @@ module Net
       def receive_data(data)
         if data[0, 4] === 'SSH-'
           puts "Client header: #{data}"
-          kexinit
         else
           packet = Packet.new(data, @mac.length)
           @mac   = packet.mac.to_s

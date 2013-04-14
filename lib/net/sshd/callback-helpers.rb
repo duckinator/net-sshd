@@ -1,15 +1,22 @@
-class Net::SSHD::Callbacks
-  include Net::SSHD::MSG
+require 'net/ssh/authentication/constants'
+require 'net/ssh/transport/constants'
 
-  def self.on(packet_type, &block)
-    @@handlers ||= Array.new(101)
+class Net::SSHD::Callbacks
+  include Net::SSHD::Constants
+
+  def self.on(packet_type = nil, &block)
+    @@handlers ||= {}
+
     @@handlers[packet_type] = block
   end
 
-  def self.handle(listener, packet)
-    packet_type = packet.type
+  def self.handle(listener, packet, type = nil)
+    packet_type = type || packet.type
 
-    packet_type = UNKNOWN if @@handlers[packet_type].nil?
-    listener.instance_eval { @@handlers[packet_type].call(packet) }
+    if @@handlers.keys.include?(packet_type)
+      listener.instance_exec(packet, &@@handlers[packet_type])
+    else
+      handle(listener, packet, :unknown)
+    end
   end
 end
