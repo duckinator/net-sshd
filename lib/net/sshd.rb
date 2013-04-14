@@ -47,8 +47,7 @@ module Net
                           client2server: [],
                           server2client: [],
                         },
-          firstKexFollows: false, # ?
-          #firstKexFollows: packet.readUInt8 > 0, # TODO: Figure this out ourselves, because we're supposed to send KEXINIT first.
+          firstKexFollows: false,
         }
 
         buffer =  Net::SSH::Buffer.from(
