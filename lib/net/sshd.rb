@@ -1,4 +1,6 @@
 require 'net/sshd/version'
+require 'net/sshd/buffer'
+require 'net/sshd/packet'
 require 'net/ssh'
 require 'eventmachine'
 require 'hexy'
@@ -9,81 +11,60 @@ module Net
     PROTO_VERSION = "SSH-2.0-Ruby/Net::SSHD_%s %s" % [Net::SSH::Version::CURRENT, RUBY_PLATFORM]
 
     class Listen < EM::Connection
+      def initialize(*args)
+        @mac_length = 0
+        @kex    = nil
+
+        super(*args)
+
+        puts 'New connection'
+        send_line(PROTO_VERSION)
+      end
+
+      def send_line(str)
+        send_data(str + "\r\n")
+      end
 
       def hexy(str)
         puts Hexy.new(str).to_s
       end
 
-      def handshake_version
-        if @buffer[0...8] == 'SSH-2.0-'
-          @buffer.slice!(0...8)
-          handshake_clientname
+      def send_payload(payload)
+        pad_length = (8 - ((5 + payload.length) % 8))
+        buffer     = Buffer.new(5 + payload.length + pad_length + @mac_length)
+
+        buffer.writeUInt32BE(payload.length + 1 + pad_length, 0)
+        buffer.writeUInt8(pad_length, 4)
+        buffer.writeString(payload, 5)
+        #buffer.fill(0, 5 + payload.length) # It's filled with NULLs from the start. This is unnecessary.
+        send_data(buffer)
+      end
+
+      def get_packet(packet)
+        type = packet.getType
+        case type
+        when 1  # Disconnect
+          error   = packet.readUInt32
+          message = packet.readString
+          puts "Disconnect (Error #{error}): #{message}"
+        when 20 # kexinit
+          send_payload(packet.payload) # agree to whatever #TODO
+          @kex = {
+            cookie: packet.readBuffer(16),
+            kexAlgs:     packet.readList,
+            hostKeyAlgs: packet.readList,
+            encAlgs:    [packet.readList, packet.readList],
+            macAlgs:    [packet.readList, packet.readList],
+            cprAlgs:    [packet.readList, packet.readList],
+            langs:      [packet.readList, packet.readList],
+            firstKexFollows: packet.readUInt8 > 1
+          }
+        when 30 # KEXECDH_INIT
+          @client_key = packet.readBuffer
+          puts @client_key.length, @client_key, @client_key.to_s
         else
-          puts "Refusing non-SSH connection."
-          bye
-        end
-      end
-
-      def handshake_clientname
-        @state = :handshake_clientname
-
-        offset = @buffer.index("\r\n")
-        if offset
-          client_name = @buffer.slice!(0...offset).strip
-          puts "client_name: %s" % client_name
-          handshake_header
-        end
-      end
-
-      def handshake_header
-        @state = :handshake_header
-        return unless @buffer.bytesize > 5
-        @packet_length, @padding_length = @buffer.slice!(0...5).unpack('NC')
-
-        puts "packet length: #{@packet_length}"
-        puts "padding length: #{@padding_length}"
-        puts "buffer length: #{@buffer.bytesize}"
-
-        n1 = @packet_length - @padding_length - 5
-        @payload = @buffer.slice!(0..n1)
-
-        n2 = @padding_length
-        random_padding = @buffer.slice!(0..n2)
-        # random_padding2 = @payload.slice!(0..(n2-3))
-
-        puts "-" * 80
-        puts "packet length: #{@payload.bytesize} vs #{n1}"
-        puts "padding length: #{random_padding.bytesize} vs #{n2}"
-        puts "payload:"
-        hexy @payload
-        ssh_msg_kexinit = @payload.slice!(0..1)
-        cookie = @payload.slice!(0..16)
-        puts "cookie:"
-        hexy cookie
-        # puts "random padding: #{random_padding.inspect}"
-        # puts "random padding2: #{random_padding2.inspect}"
-        # m = @payload.slice!(0..1).unpack('C').first
-        # mac = @payload.slice!(0..m)
-        # puts "m: #{m}, mac: #{mac.inspect}"
-        # puts "buffer end: #{@buffer.inspect}"
-      end
-
-      def process_packets
-        case @state
-        when :post_init
-          handshake_version
-        when :handshake_clientname
-          handshake_clientname
-        when :handshake_header
-          handshake_header
-        end
-      end
-
-      def post_init
-        @buffer, @state = "", :post_init
-        send_data(PROTO_VERSION + "\r\n")
-        EM.add_timer(1.5) do
-          bye if [:post_init, :handshake_clientname].include?(@state)
+          puts "Unimpl packet", type, packet.payload, packet.payload.to_s
+          exit
         end
       end
 
@@ -94,9 +75,17 @@ module Net
       end
 
       def receive_data(data)
-        p ['data', data.size, data]
-        @buffer += data
-        process_packets
+#        puts "data [#{data.size}]: #{data.inspect}"
+#        @buffer += data
+#        process_packets
+
+        if data[0, 4] === 'SSH-'
+          puts "Client header: #{data}"
+        else
+          packet = Packet.new(data, @mac_length)
+          puts "Received #{packet.getType} packet"
+          get_packet(packet)
+        end
       end
     end
 
