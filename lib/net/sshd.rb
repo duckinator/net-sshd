@@ -83,13 +83,7 @@ module Net
         pad_length = (8 - ((5 + payload.length) % 8))
         pad_length += 8 if pad_length < 8
         padding = "\x01" * pad_length # TODO: Make this a random string
-#        buffer     = Buffer.new(5 + payload.length + pad_length + @mac_length)
 
-#        buffer.writeUInt32BE(payload.length + 1 + pad_length, 0)
-#        buffer.writeUInt8(pad_length, 4)
-#        buffer.writeRaw(payload, 5)
-        #buffer.fill(0, 5 + payload.length) # It's filled with NULLs from the start. This is unnecessary.
-#p buffer
         buffer =  Net::SSH::Buffer.from(
                     :long, payload.length + 1 + pad_length,
                     :byte, pad_length,
@@ -126,10 +120,6 @@ module Net
       end
 
       def receive_data(data)
-#        puts "data [#{data.size}]: #{data.inspect}"
-#        @buffer += data
-#        process_packets
-
         if data[0, 4] === 'SSH-'
           puts "Client header: #{data}"
           kexinit
