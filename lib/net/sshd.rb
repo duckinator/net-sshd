@@ -1,4 +1,5 @@
 require 'net/sshd/version'
+require 'net/sshd/constants'
 require 'net/sshd/buffer'
 require 'net/sshd/packet'
 require 'net/ssh'
@@ -36,7 +37,7 @@ module Net
 
         buffer.writeUInt32BE(payload.length + 1 + pad_length, 0)
         buffer.writeUInt8(pad_length, 4)
-        buffer.writeString(payload, 5)
+        buffer.writeRaw(payload, 5)
         #buffer.fill(0, 5 + payload.length) # It's filled with NULLs from the start. This is unnecessary.
         send_data(buffer)
       end
@@ -44,23 +45,53 @@ module Net
       def get_packet(packet)
         type = packet.getType
         case type
-        when 1  # Disconnect
+        when MSG::DISCONNECT  # Disconnect
           error   = packet.readUInt32
           message = packet.readString
           puts "Disconnect (Error #{error}): #{message}"
-        when 20 # kexinit
-          send_payload(packet.payload) # agree to whatever #TODO
+        when MSG::KEXINIT # kexinit
+          @client_cookie = packet.readBuffer(16)
           @kex = {
-            cookie: packet.readBuffer(16),
-            kexAlgs:     ['diffie-hellman-group-exchange-sha256'],
-            hostKeyAlgs: ['ssh-rsa'],
-            encAlgs:     [['aes128-ctr'], ['aes128-ctr']],
-            macAlgs:     [['hmac-md5'],   ['hmac-md5']],
-            cprAlgs:     [['none'],       ['none']],
-            langs:       [[], []],
-            firstKexFollows: packet.readUInt8 > 1,
+            cookie:       'asdfasdfasdfasdf', # TODO: Generate an actual cookie.
+            kexAlgs:      ['diffie-hellman-group-exchange-sha256'],
+            hostKeyAlgs:  ['ssh-rsa'],
+            encAlgs:      {
+                            client2server: ['aes128-ctr'],
+                            server2client: ['aes128-ctr'],
+                          },
+            macAlgs:      {
+                            client2server: ['hmac-md5'],
+                            server2client: ['hmac-md5'],
+                          },
+            cprAlgs:      {
+                            client2server: ['none'],
+                            server2client: ['none'],
+                          },
+            langs:        {
+                            client2server: [],
+                            server2client: [],
+                          },
+            firstKexFollows: packet.readUInt8 > 0, # TODO: Figure this out ourselves, because we're supposed to send KEXINIT first.
           }
-        when 30 # KEXECDH_INIT
+
+          buf = Buffer.new
+          buf.pack(
+                    { byte:       MSG::KEXINIT       },
+                    { raw:        @kex[:cookie]      },
+                    { name_list:  @kex[:kexAlgs]     },
+                    { name_list:  @kex[:encAlgs][:client2server] },
+                    { name_list:  @kex[:encAlgs][:server2client] },
+                    { name_list:  @kex[:macAlgs][:client2server] },
+                    { name_list:  @kex[:macAlgs][:server2client] },
+                    { name_list:  @kex[:cprAlgs][:client2server] },
+                    { name_list:  @kex[:cprAlgs][:server2client] },
+                    { name_list:  @kex[:langs][:client2server]   },
+                    { name_list:  @kex[:langs][:server2client]   },
+                    { bool:   @kex[:firstKexFollows] },
+                    { uint32: 0                      },
+                  )
+          send_payload(buf)
+        when MSG::KEXECDH_INIT
           @client_key = packet.readBuffer
           puts "Got #{@client_key.length} byte key: #{@client_key.inspect}"
         else
