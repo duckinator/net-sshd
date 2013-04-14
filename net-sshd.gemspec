@@ -20,7 +20,6 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency "net-ssh",      "~> 2.6.7"
   spec.add_runtime_dependency "eventmachine", "~> 1.0.3"
-  spec.add_runtime_dependency "hexy",         "~> 0.1.2"
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"

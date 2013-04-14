@@ -5,7 +5,6 @@ require 'net/sshd/packet'
 require 'net/ssh'
 require 'eventmachine'
 require 'pp'
-require 'hexy'
 
 module Net
   module SSHD
@@ -73,10 +72,6 @@ module Net
 
       def send_line(str)
         send_data(str + "\r\n")
-      end
-
-      def hexy(str)
-        puts Hexy.new(str).to_s
       end
 
       def send_payload(payload)
