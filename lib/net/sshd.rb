@@ -3,6 +3,7 @@ require 'net/sshd/constants'
 require 'net/sshd/packet'
 require 'net/ssh'
 require 'eventmachine'
+require 'securerandom'
 require 'pp'
 
 module Net
@@ -23,7 +24,7 @@ module Net
 
       # TODO: Generate a random cookie.
       def _generate_cookie
-        'asdfasdfasdfasdf'
+        SecureRandom.random_bytes(16)
       end
 
       def kexinit
