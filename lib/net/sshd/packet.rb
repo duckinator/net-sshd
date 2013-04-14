@@ -1,51 +1,27 @@
+require 'net/ssh'
+
 module Net
   module SSHD
-    class Packet
-      attr_accessor :payload, :idx
+    class Packet < Net::SSH::Buffer
+      attr_accessor :type, :mac
 
       def initialize(buffer, mac_length)
-        buffer = Buffer.new(nil, buffer)
-        pkt_length = buffer.readUInt32BE(0)
-        pad_length = buffer.readUInt8(4)
+        super()
+        buffer = Net::SSH::Buffer.new.append(buffer)
+        pkt_length = buffer.read_long
+        pad_length = buffer.read_byte
         pay_length = pkt_length - pad_length
-        mac_idx    = 4 + pkt_length
+        payload    = buffer.read(pay_length)
+        padding    = buffer.read(pad_length)
+        @mac       = buffer.read(mac_length)
 
-        @payload = buffer.slice(5...(4 + pay_length))
-        mac      = buffer.slice(mac_idx...(mac_idx + mac_length))
+        append(payload)
 
-        @idx = 1
+        @type = read_byte
       end
-
-      def type
-        @payload.unpack('C').first
-      end
-
-      def read_bool
-        readUInt8 > 0
-      end
-
-      def read_byte
-        tmp = @payload[@idx..-1].unpack('C')
-        @idx += 1
-        tmp.first
-      end
-
-      def read_long
-        tmp = @payload[@idx..-1].unpack('L>')
-        @idx += 4
-        tmp.first
-      end
-
-      def read(len = nil)
-        len = readUInt32 unless len
-        @payload.slice(@idx...(@idx += len))
-      end
-
-      # readString(len) to readBuffer(len), because our buffers are strings.
-      alias :read_string :read
 
       def read_list
-        str = readString
+        str = read_string
         str.nil? ? [] : str.split(',')
       end
     end
