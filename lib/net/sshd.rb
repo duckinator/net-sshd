@@ -1,7 +1,8 @@
 require 'net/sshd/version'
+require 'net/ssh'
 require 'net/sshd/constants'
 require 'net/sshd/packet'
-require 'net/ssh'
+require 'net/sshd/callbacks'
 require 'eventmachine'
 require 'securerandom'
 require 'pp'
@@ -13,7 +14,7 @@ module Net
 
     class Listen < EM::Connection
       def initialize(*args)
-        @mac_length = 0
+        @mac    = ''
         @kex    = nil
 
         super(*args)
@@ -55,6 +56,7 @@ module Net
                     :byte,       MSG::KEXINIT,
                     :raw,        @kex[:cookie],
                     :string,     @kex[:kexAlgs],
+                    :string,     @kex[:hostKeyAlgs],
                     :string,     @kex[:encAlgs][:client2server].join(','),
                     :string,     @kex[:encAlgs][:server2client].join(','),
                     :string,     @kex[:macAlgs][:client2server].join(','),
@@ -64,9 +66,9 @@ module Net
                     :string,     @kex[:langs][:client2server].join(','),
                     :string,     @kex[:langs][:server2client].join(','),
                     :bool,       @kex[:firstKexFollows],
-                    :long,       0,
+                    :long,       0, # Reserved (supposed to be 0)
                   )
-        send_payload(buffer)
+        send_payload(buffer.content)
       end
 
       def send_line(str)
@@ -83,28 +85,9 @@ module Net
                     :byte, pad_length,
                     :raw,  payload,
                     :raw,  padding,
+                    :raw,  @mac,
                   )
         send_data(buffer.content)
-      end
-
-      def get_packet(packet)
-        type = packet.type
-        case type
-        when MSG::DISCONNECT  # Disconnect
-          error   = packet.read_long
-          message = packet.read_string
-          puts "Disconnect (Error #{error}): #{message}"
-        when MSG::KEXINIT # kexinit
-          @client_cookie = packet.read(16)
-        when MSG::KEXECDH_INIT
-          @client_key = packet.read_string
-          puts "Got #{@client_key.length} byte key: #{@client_key.inspect}"
-        else
-          puts "Unimplemented packet type: #{type}."
-          puts "Packet payload:"
-          p packet.payload
-          exit
-        end
       end
 
       def bye(delay_ms = 0)
@@ -118,9 +101,10 @@ module Net
           puts "Client header: #{data}"
           kexinit
         else
-          packet = Packet.new(data, @mac_length)
+          packet = Packet.new(data, @mac.length)
+          @mac   = packet.mac.to_s
           puts "Received #{packet.type} packet"
-          get_packet(packet)
+          Callbacks.handle(self, packet)
         end
       end
     end

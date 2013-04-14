@@ -13,6 +13,8 @@ module Net
       # ...
       KEXECDH_INIT    = 30
       # ...
+      KEX_DH_GEX_REQ  = 34
+      # ...
       AUTH_REQ        = 50
       AUTH_FAILURE    = 51
       AUTH_SUCCESS    = 52
@@ -33,6 +35,10 @@ module Net
       CHAN_REQUEST    = 98
       CHAN_SUCCESS    = 99
       CHAN_FAIL       = 100
+
+      # Not part of the spec.
+      # Only for convenience in net/sshd/callbacks
+      UNKNOWN         = 101
     end
   end
 end
