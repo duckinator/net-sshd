@@ -87,6 +87,8 @@ module Net
                     :raw,  padding,
                     :raw,  @mac,
                   )
+
+        puts ">> Type ?? - #{payload.length} bytes"
         send_data(buffer.content)
       end
 
@@ -103,7 +105,7 @@ module Net
         else
           packet = Packet.new(data, @mac.length)
           @mac   = packet.mac.to_s
-          puts "Received #{packet.type} packet"
+          puts "<< Type #{packet.type} - #{packet.content.length} bytes"
           Callbacks.handle(self, packet)
         end
       end

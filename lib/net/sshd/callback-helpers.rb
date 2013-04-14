@@ -8,6 +8,7 @@ class Net::SSHD::Callbacks
 
   def self.handle(listener, packet)
     packet_type = packet.type
+
     packet_type = UNKNOWN if @@handlers[packet_type].nil?
     listener.instance_eval { @@handlers[packet_type].call(packet) }
   end
