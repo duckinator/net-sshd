@@ -81,7 +81,7 @@ module Net
       end
 
       def writeString(str, index = self.length)
-        len_str = writeUInt32(str.length, index)
+        len_str = writeUInt32BE(str.length, index)
         writeRaw(str, index + len_str.length)
       end
 
