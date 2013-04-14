@@ -23,14 +23,13 @@ module Net
         send_line(PROTO_VERSION)
       end
 
-      # TODO: Generate a random cookie.
-      def _generate_cookie
-        SecureRandom.random_bytes(16)
+      def _random_string(length)
+        SecureRandom.random_bytes(length)
       end
 
       def kexinit
         @kex = {
-          cookie:       _generate_cookie,
+          cookie:       _random_string(16),
           kexAlgs:      ['diffie-hellman-group-exchange-sha256'],
           hostKeyAlgs:  ['ssh-rsa'],
           encAlgs:      {
@@ -78,7 +77,7 @@ module Net
       def send_payload(payload)
         pad_length = (8 - ((5 + payload.length) % 8))
         pad_length += 8 if pad_length < 8
-        padding = "\x01" * pad_length # TODO: Make this a random string
+        padding = _random_string(pad_length)
 
         buffer =  Net::SSH::Buffer.from(
                     :long, payload.length + 1 + pad_length,
