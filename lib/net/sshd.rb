@@ -3,6 +3,7 @@ require 'net/sshd/buffer'
 require 'net/sshd/packet'
 require 'net/ssh'
 require 'eventmachine'
+require 'pp'
 require 'hexy'
 
 module Net
@@ -51,13 +52,13 @@ module Net
           send_payload(packet.payload) # agree to whatever #TODO
           @kex = {
             cookie: packet.readBuffer(16),
-            kexAlgs:     packet.readList,
-            hostKeyAlgs: packet.readList,
-            encAlgs:    [packet.readList, packet.readList],
-            macAlgs:    [packet.readList, packet.readList],
-            cprAlgs:    [packet.readList, packet.readList],
-            langs:      [packet.readList, packet.readList],
-            firstKexFollows: packet.readUInt8 > 1
+            kexAlgs:     ['diffie-hellman-group-exchange-sha256'],
+            hostKeyAlgs: ['ssh-rsa'],
+            encAlgs:     [['aes128-ctr'], ['aes128-ctr']],
+            macAlgs:     [['hmac-md5'],   ['hmac-md5']],
+            cprAlgs:     [['none'],       ['none']],
+            langs:       [[], []],
+            firstKexFollows: packet.readUInt8 > 1,
           }
         when 30 # KEXECDH_INIT
           @client_key = packet.readBuffer
