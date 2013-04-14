@@ -62,9 +62,11 @@ module Net
           }
         when 30 # KEXECDH_INIT
           @client_key = packet.readBuffer
-          puts @client_key.length, @client_key, @client_key.to_s
+          puts "Got #{@client_key.length} byte key: #{@client_key.inspect}"
         else
-          puts "Unimpl packet", type, packet.payload, packet.payload.to_s
+          puts "Unimplemented packet type: #{type}."
+          puts "Packet payload:"
+          p packet.payload
           exit
         end
       end
