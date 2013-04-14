@@ -149,9 +149,7 @@ module Net
       end
 
       def writeUInt32BE(i, index)
-p index
         tmp = [i].pack('L>')
-p tmp
         self[index, tmp.length] = tmp
       end
 
