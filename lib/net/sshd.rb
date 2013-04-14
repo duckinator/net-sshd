@@ -96,20 +96,20 @@ module Net
                     :raw,  payload,
                     :raw,  padding,
                   )
-        send_data(buffer)
+        send_data(buffer.content)
       end
 
       def get_packet(packet)
-        type = packet.getType
+        type = packet.type
         case type
         when MSG::DISCONNECT  # Disconnect
-          error   = packet.readUInt32
-          message = packet.readString
+          error   = packet.read_long
+          message = packet.read_string
           puts "Disconnect (Error #{error}): #{message}"
         when MSG::KEXINIT # kexinit
-          @client_cookie = packet.readBuffer(16)
+          @client_cookie = packet.read(16)
         when MSG::KEXECDH_INIT
-          @client_key = packet.readBuffer
+          @client_key = packet.read_string
           puts "Got #{@client_key.length} byte key: #{@client_key.inspect}"
         else
           puts "Unimplemented packet type: #{type}."
@@ -135,7 +135,7 @@ module Net
           kexinit
         else
           packet = Packet.new(data, @mac_length)
-          puts "Received #{packet.getType} packet"
+          puts "Received #{packet.type} packet"
           get_packet(packet)
         end
       end

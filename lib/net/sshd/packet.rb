@@ -16,35 +16,35 @@ module Net
         @idx = 1
       end
 
-      def getType
+      def type
         @payload.unpack('C').first
       end
 
-      def readBool
+      def read_bool
         readUInt8 > 0
       end
 
-      def readUInt8
+      def read_byte
         tmp = @payload[@idx..-1].unpack('C')
         @idx += 1
         tmp.first
       end
 
-      def readUInt32
+      def read_long
         tmp = @payload[@idx..-1].unpack('L>')
         @idx += 4
         tmp.first
       end
 
-      def readBuffer(len = nil)
+      def read(len = nil)
         len = readUInt32 unless len
         @payload.slice(@idx...(@idx += len))
       end
 
       # readString(len) to readBuffer(len), because our buffers are strings.
-      alias :readString :readBuffer
+      alias :read_string :read
 
-      def readList
+      def read_list
         str = readString
         str.nil? ? [] : str.split(',')
       end
