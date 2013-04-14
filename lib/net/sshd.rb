@@ -1,6 +1,5 @@
 require 'net/sshd/version'
 require 'net/sshd/constants'
-require 'net/sshd/buffer'
 require 'net/sshd/packet'
 require 'net/ssh'
 require 'eventmachine'
