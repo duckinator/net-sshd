@@ -42,7 +42,8 @@ module Net
                     :raw,  @mac,
                   )
 
-        puts ">> Type ?? - #{payload.length} bytes"
+        packet = Packet.new(buffer.content, @mac.length) # This is a bit of a hack, but oh well.
+        puts ">> Type #{packet.type} - #{payload.length} bytes"
         send_data(buffer.content)
       end
 
