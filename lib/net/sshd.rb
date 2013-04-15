@@ -16,6 +16,7 @@ module Net
       def initialize(*args)
         @mac    = ''
         @kex    = nil
+        @padding_block_size = 8 # Changed to 16 when crypto is enabled.
 
         super(*args)
         Callbacks.handle(self, nil, :connect)
@@ -30,8 +31,8 @@ module Net
       end
 
       def send_payload(payload)
-        pad_length = (8 - ((5 + payload.length) % 8))
-        pad_length += 8 if pad_length < 8
+        pad_length = (@padding_block_size - ((5 + payload.length) % @padding_block_size))
+        pad_length += @padding_block_size if pad_length < @padding_block_size
         padding = _random_string(pad_length)
 
         buffer =  Net::SSH::Buffer.from(
