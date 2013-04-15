@@ -14,8 +14,9 @@ module Net
 
     class Listen < EM::Connection
       def initialize(*args)
-        @mac    = ''
-        @kex    = nil
+        @mac = ''
+        @server_kex    = nil
+        @client_kex    = nil
         @padding_block_size = 8 # Changed to 16 when crypto is enabled.
 
         super(*args)
@@ -28,6 +29,10 @@ module Net
 
       def send_line(str)
         send_data(str + "\r\n")
+      end
+
+      def send_packet(*args)
+        send_payload(Net::SSH::Buffer.from(*args).content)
       end
 
       def send_payload(payload)
