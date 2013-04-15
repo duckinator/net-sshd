@@ -47,17 +47,17 @@ module Net
       REQ_SUCCESS     = 81
       REQ_FAILURE     = 82
       # ...
-      CHAN_OPEN       = 90
-      CHAN_OPEN_CONF  = 91
-      CHAN_OPEN_FAIL  = 92
-      CHAN_WINDOW_ADJ = 93
-      CHAN_DATA       = 94
-      CHAN_EXT_DATA   = 95
-      CHAN_EOF        = 96
-      CHAN_CLOSE      = 97
-      CHAN_REQUEST    = 98
-      CHAN_SUCCESS    = 99
-      CHAN_FAIL       = 100
+      CHANNEL_OPEN       = 90
+      CHANNEL_OPEN_CONF  = 91
+      CHANNEL_OPEN_FAIL  = 92
+      CHANNEL_WINDOW_ADJ = 93
+      CHANNEL_DATA       = 94
+      CHANNEL_EXT_DATA   = 95
+      CHANNEL_EOF        = 96
+      CHANNEL_CLOSE      = 97
+      CHANNEL_REQUEST    = 98
+      CHANNEL_SUCCESS    = 99
+      CHANNEL_FAIL       = 100
 
     end
   end
