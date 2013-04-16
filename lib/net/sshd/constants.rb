@@ -22,30 +22,31 @@ module Net
 
       # ...
 
-      # Dupes! These
-      KEXDH_INIT      = 30
-      KEXDH_REPLY     = 31
+      # Dupes!
+      KEX_DH_INIT     = 30
+      KEX_DH_REPLY    = 31
       KEXECDH_INIT    = 30
       KEXECDH_REPLY   = 31
 
-      # ...
+      KEX_DH_GEX_INIT = 32
+      KEX__UNKNOWN_33 = 33 # TODO: Find the name of this.
       KEX_DH_GEX_REQ  = 34
       # ...
 
       # Authentication
-      AUTH_REQ        = 50
-      AUTH_FAILURE    = 51
-      AUTH_SUCCESS    = 52
-      AUTH_BANNER     = 53
+      USERAUTH_REQUEST   = 50
+      USERAUTH_FAILURE   = 51
+      USERAUTH_SUCCESS   = 52
+      USERAUTH_BANNER    = 53
       # ...
-      AUTH_PASSWD_CHANGEREQ = 60
-      AUTH_PK_OK      = 60
+      USERAUTH_PASSWD_CHANGEREQ = 60
+      USERAUTH_PK_OK     = 60
       # ...
       USERAUTH_METHOD_RANGE = 60..79
 
-      GLOBAL_REQ      = 80
-      REQ_SUCCESS     = 81
-      REQ_FAILURE     = 82
+      GLOBAL_REQUEST     = 80
+      REQUEST_SUCCESS    = 81
+      REQUEST_FAILURE    = 82
       # ...
       CHANNEL_OPEN       = 90
       CHANNEL_OPEN_CONF  = 91
