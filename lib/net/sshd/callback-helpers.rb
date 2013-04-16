@@ -1,8 +1,5 @@
-require 'net/ssh/authentication/constants'
-require 'net/ssh/transport/constants'
-
 class Net::SSHD::Callbacks
-  include Net::SSHD::Constants
+  include Net::SSHD::Constants::MSG
 
   def self.on(packet_type = nil, &block)
     @@handlers ||= {}
