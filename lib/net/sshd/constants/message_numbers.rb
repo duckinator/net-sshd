@@ -25,15 +25,15 @@ module Net
           # Diffie-hellman(?) key exchange
           KEX_DH_INIT     = 30
           KEX_DH_REPLY    = 31
-          # TODO: Find 32-39 for diffie-hellman(?) key exchange method
+          KEX_DH_GEX_INIT = 32
+          KEX__UNKNOWN_33 = 33 # TODO: Find the name of this.
+          KEX_DH_GEX_REQ  = 34
+          # TODO: Find 33 and 35-39 for diffie-hellman(?) key exchange method
 
           # ? key exchange  # TODO: find the name of this key exchange
           KEXECDH_INIT    = 30
           KEXECDH_REPLY   = 31
-          KEX_DH_GEX_INIT = 32
-          KEX__UNKNOWN_33 = 33 # TODO: Find the name of this.
-          KEX_DH_GEX_REQ  = 34
-          # TODO: Find 33 and 35-39 for this key exchange method
+          # TODO: Find 32-39 for this key exchange method
 
         # Authentication
         USERAUTH_REQUEST   = 50
