@@ -68,6 +68,7 @@ class Net::SSHD::Callbacks
   end
 
   on KEX_DH_GEX_REQ do |packet|
+=begin
     @dhflags = {
       min:  packet.read_long,
       n:    packet.read_long,
@@ -80,6 +81,7 @@ class Net::SSHD::Callbacks
       :mpint, 2.chr,
     )
     dh.generateKeys
+=end
   end
 
   on KEX_DH_GEX_INIT do |packet|
