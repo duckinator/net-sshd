@@ -67,7 +67,7 @@ class Net::SSHD::Callbacks
     }
   end
 
-  on KEX_DH_GEX_REQ do |packet|
+  on KEX_DH_GEX_REQUEST do |packet|
 =begin
     @dhflags = {
       min:  packet.read_long,
