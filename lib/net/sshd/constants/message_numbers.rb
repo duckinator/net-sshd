@@ -22,13 +22,17 @@ module Net
 
         # 30-49 are key exchange method specific
 
-          # Diffie-hellman(?) key exchange
+          # Diffie-Hellman key exchange
           KEX_DH_INIT     = 30
           KEX_DH_REPLY    = 31
-          KEX_DH_GEX_INIT = 32
-          KEX__UNKNOWN_33 = 33 # TODO: Find the name of this.
-          KEX_DH_GEX_REQ  = 34
-          # TODO: Find 33 and 35-39 for diffie-hellman(?) key exchange method
+
+          # Diffie-Hellman Group Exchange (RFC: http://www.ietf.org/rfc/rfc4419.txt)
+          KEX_DH_GEX_REQUEST_OLD = 30
+          KEX_DH_GEX_REQUEST  = 34
+          KEX_DH_GEX_GROUP    = 31
+          KEX_DH_GEX_INIT     = 32
+          KEX_DH_GEX_REPLY    = 33
+          # I don't believe there is a 34-39 defined for DH Group Exchange
 
           # ? key exchange  # TODO: find the name of this key exchange
           KEXECDH_INIT    = 30
