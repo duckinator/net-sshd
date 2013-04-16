@@ -19,6 +19,10 @@ module Net
         @client_kex    = nil
         @padding_block_size = 8 # Changed to 16 when crypto is enabled.
 
+        @proc = nil
+        @command = nil
+        @keyson = false
+
         super(*args)
         Callbacks.handle(self, nil, :connect)
       end
@@ -31,8 +35,12 @@ module Net
         send_data(str + "\r\n")
       end
 
+      def build_packet(*args)
+        Net::SSH::Buffer.from(*args).content
+      end
+
       def send_packet(*args)
-        send_payload(Net::SSH::Buffer.from(*args).content)
+        send_payload(build_packet(*args))
       end
 
       def send_payload(payload)
