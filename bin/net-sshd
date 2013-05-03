@@ -8,19 +8,21 @@ options = {
   port: 8022,
 }
 
-OptionParser.new do |opts|
+optparse = OptionParser.new do |opts|
   opts.banner = "Usage: net-sshd [options]"
 
-  opts.on("-o", "--host HOST", "listen on HOST (default: #{options[:host]})") do
-    options[:host]
+  opts.on("-o", "--host HOST", "listen on HOST (default: #{options[:host]})") do |host|
+    options[:host] = host
   end
 
-  opts.on("-p", "--port PORT", "use PORT (default: #{options[:port]})") do
-    options[:port]
+  opts.on("-p", "--port PORT", "use PORT (default: #{options[:port]})") do |port|
+    options[:port] = port.to_i
   end
 end
 
+optparse.parse!
+
 EM.run do
-  Net::SSHD.start('127.0.0.1', 8022)
+  Net::SSHD.start(options[:host], options[:port])
 end
 
