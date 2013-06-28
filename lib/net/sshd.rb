@@ -57,7 +57,7 @@ module Net
                   )
 
         packet = Packet.new(buffer.content, @mac.length) # This is a bit of a hack, but oh well.
-        puts ">> Type #{packet.type} - #{payload.length} bytes"
+        puts "[SEND] Type #{packet.type} - #{payload.length} bytes"
         send_data(buffer.content)
       end
 
@@ -73,7 +73,7 @@ module Net
         else
           packet = Packet.new(data, @mac.length)
           @mac   = packet.mac.to_s
-          puts "<< Type #{packet.type} - #{packet.content.length} bytes"
+          puts "[RECV] Type #{packet.type} - #{packet.content.length} bytes"
           Callbacks.handle(self, packet)
         end
       end
