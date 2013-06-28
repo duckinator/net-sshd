@@ -1,5 +1,9 @@
 require 'net/sshd/callback-helpers'
 require 'net/ssh'
+require 'openssl'
+
+# node.js: getPrime, generateKeys, computeSecret, getPublicKey
+# OpenSSL::PKey::DH: p, g, generate, compute_key, pub_key
 
 class Net::SSHD::Callbacks
   on :connect do |packet|
@@ -67,7 +71,7 @@ class Net::SSHD::Callbacks
     }
   end
 
-  on KEX_DH_GEX_REQUEST do |packet|
+#  on KEX_DH_GEX_REQUEST do |packet|
 =begin
     @dhflags = {
       min:  packet.read_long,
@@ -82,9 +86,9 @@ class Net::SSHD::Callbacks
     )
     dh.generateKeys
 =end
-  end
+#  end
 
-  on KEX_DH_GEX_INIT do |packet|
+#  on KEX_DH_GEX_INIT do |packet|
 =begin
     e = packet.read_mpint
     dh.secret = dh.computeSecret(e)
@@ -96,9 +100,9 @@ class Net::SSHD::Callbacks
       :string,  sign_buffer(session)
     )
 =end
-  end
+#  end
 
-  on NEWKEYS do |packet|
+#  on NEWKEYS do |packet|
 =begin
     send_packet(:byte, 21)
     @keyson = true
@@ -112,31 +116,31 @@ class Net::SSHD::Callbacks
 
     #...
 =end
-  end
+#  end
 
-  on SERVICE_REQUEST do |packet|
+#  on SERVICE_REQUEST do |packet|
     
-  end
+#  end
 
-  on USERAUTH_REQUEST do |packet|
+#  on USERAUTH_REQUEST do |packet|
     
-  end
+#  end
 
-  on GLOBAL_REQUEST do |packet|
+#  on GLOBAL_REQUEST do |packet|
     
-  end
+#  end
 
-  on CHANNEL_OPEN do |packet|
+#  on CHANNEL_OPEN do |packet|
     
-  end
+#  end
 
-  on CHANNEL_EOF do |packet|
+#  on CHANNEL_EOF do |packet|
     
-  end
+#  end
 
-  on CHANNEL_REQUEST do |packet|
+#  on CHANNEL_REQUEST do |packet|
     
-  end
+#  end
 
   on CHANNEL_DATA do |packet|
     chan = packet.read_long
@@ -186,7 +190,12 @@ class Net::SSHD::Callbacks
   end
 
   on :unknown do |packet|
-    puts "Unimplemented packet type: #{packet.type}."
+    packet_type_name =
+      Net::SSHD::Constants::MSG.constants.select do |const|
+        Net::SSHD::Constants::MSG.const_get(const) == packet.type
+      end.first.to_s
+
+    puts "Unimplemented packet type: #{packet_type_name} (#{packet.type})."
     puts "Packet payload:"
     p packet.content
     exit
