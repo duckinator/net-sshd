@@ -71,22 +71,24 @@ class Net::SSHD::Callbacks
     }
   end
 
-#  on KEX_DH_GEX_REQUEST do |packet|
-=begin
+  on KEX_DH_GEX_REQUEST do |packet|
     @dhflags = {
       min:  packet.read_long,
       n:    packet.read_long,
       max:  packet.read_long
     }
 
+    @dh = OpenSSL::PKey::DH.new#(Net::SSHD::Groups::MODP2, 2)
+    @dh.p = OpenSSL::BN.new(Net::SSHD::Groups::MODP2, 2)
+    @dh.g = 2
+
     send_packet(
       :byte,  KEX_DH_REPLY,
-      :mpint, dh.getPrime,
-      :mpint, 2.chr,
+      :bignum, Net::SSHD::Groups::MODP2.unpack('H*')[0].to_i(16),
+      :bignum, 2,
     )
-    dh.generateKeys
-=end
-#  end
+    @dh.g
+  end
 
 #  on KEX_DH_GEX_INIT do |packet|
 =begin
