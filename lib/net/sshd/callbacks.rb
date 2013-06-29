@@ -84,8 +84,8 @@ class Net::SSHD::Callbacks
 
     send_packet(
       :byte,  KEX_DH_REPLY,
-      :bignum, Net::SSHD::Groups::MODP2.unpack('H*')[0].to_i(16),
-      :bignum, 2,
+      :bignum, @dh.p,
+      :bignum, OpenSSL::BN.new(2.to_s),
     )
     @dh.g
   end
