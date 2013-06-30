@@ -83,42 +83,49 @@ class Net::SSHD::Callbacks
     @dh.g = 2
 
     send_packet(
-      :byte,  KEX_DH_REPLY,
+      :byte,   KEX_DH_REPLY,
       :bignum, @dh.p,
-      :bignum, OpenSSL::BN.new(2.to_s),
+      :bignum, OpenSSL::BN.new("2"),
     )
-    @dh.g
+    @dh.generate_key!
   end
 
-#  on KEX_DH_GEX_INIT do |packet|
-=begin
-    e = packet.read_mpint
-    dh.secret = dh.computeSecret(e)
+  on KEX_DH_GEX_INIT do |packet|
+    e = packet.read_bignum
+    @dh_secret = @dh.compute_key(e)
+
+    hash_in = [
+      :bignum, e,
+      :bignum, OpenSSL::BN.new(@dh.public_key.to_der),
+      :bignum, OpenSSL::BN.new(@dh_secret, 2),
+    ]
+
+    sha = OpenSSL::Digest::SHA256.new
+    sha << build_packet(*hash_in)
+    @session = sha.digest
 
     send_packet(
-      :byte,    KEX__UNKNOWN_33,
+      :byte,    KEX_DH_GEX_REPLY,
       :string,  @host_public_key,
-      :mpint,   dh.getPublicKey,
-      :string,  sign_buffer(session)
+      :bignum,  OpenSSL::BN.new(@dh.public_key.to_der),
+      :string,  sign_buffer(@session),
     )
-=end
-#  end
-
-#  on NEWKEYS do |packet|
+  end
 =begin
+  on NEWKEYS do |packet|
     send_packet(:byte, 21)
     @keyson = true
 
     keysize = lambda do |salt|
-      # TODO: dh.secret might need ot be encoded for SSH
-      var sha = crypto.createHash('SHA256')
-      sha.write(build_packet(:mpint, dh.secret) + @session + salt + @session)
+      # TODO: @dh_secret might need to be encoded for SSH
+      sha = OpenSSL::Diget::SHA256.new
+      sha << build_packet(:bignum, @dh_secret) + @session + salt + @session
       sha
     end
 
     #...
+  end
 =end
-#  end
 
 #  on SERVICE_REQUEST do |packet|
     
@@ -144,6 +151,7 @@ class Net::SSHD::Callbacks
     
 #  end
 
+=begin
   on CHANNEL_DATA do |packet|
     chan = packet.read_long
     data = packet.read_string
@@ -190,6 +198,7 @@ class Net::SSHD::Callbacks
       )
     end
   end
+=end
 
   on :unknown do |packet|
     packet_type_name =

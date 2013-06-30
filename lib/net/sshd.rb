@@ -19,6 +19,8 @@ module Net
         @client_kex    = nil
         @padding_block_size = 8 # Changed to 16 when crypto is enabled.
 
+        @hostkey = open(File.join(ENV['HOME'], 'hostkey')).read
+
         @proc = nil
         @command = nil
         @keyson = false
@@ -29,6 +31,12 @@ module Net
 
       def _random_string(length)
         SecureRandom.random_bytes(length)
+      end
+
+      def sign_buffer(buffer)
+        signer = OpenSSL::PKey::RSA.new(@hostkey)
+        signature = signer.public_encrypt(buffer)
+        build_packet(:raw, 'ssh-rsa', :raw, signature)
       end
 
       def send_line(str)
