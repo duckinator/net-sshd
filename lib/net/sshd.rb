@@ -5,6 +5,7 @@ require 'net/sshd/packet'
 require 'net/sshd/callbacks'
 require 'eventmachine'
 require 'securerandom'
+require 'base64'
 require 'pp'
 
 module Net
@@ -20,7 +21,7 @@ module Net
         @padding_block_size = 8 # Changed to 16 when crypto is enabled.
 
         @hostkey     = open(File.join(ENV['HOME'], 'hostkey')).read
-        @hostkey_pub = open(File.join(ENV['HOME'], 'hostkey.pub')).read
+        @hostkey_pub = Base64.decode64(open(File.join(ENV['HOME'], 'hostkey.pub')).read.split(' ')[1])
 
         @proc = nil
         @command = nil
