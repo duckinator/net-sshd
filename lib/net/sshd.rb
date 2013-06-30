@@ -19,7 +19,8 @@ module Net
         @client_kex    = nil
         @padding_block_size = 8 # Changed to 16 when crypto is enabled.
 
-        @hostkey = open(File.join(ENV['HOME'], 'hostkey')).read
+        @hostkey     = open(File.join(ENV['HOME'], 'hostkey')).read
+        @hostkey_pub = open(File.join(ENV['HOME'], 'hostkey.pub')).read
 
         @proc = nil
         @command = nil
