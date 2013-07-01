@@ -107,7 +107,7 @@ class Net::SSHD::Callbacks
     send_packet(
       :byte,    KEX_DH_GEX_REPLY,
       :string,  @hostkey_pub,
-      :bignum,  OpenSSL::BN.new(@dh.public_key.to_der),
+      :bignum,  @dh.pub_key,
       :string,  sign_buffer(@session),
     )
   end
