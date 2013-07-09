@@ -79,7 +79,8 @@ module Net
 
       def receive_data(data)
         if data[0, 4] === 'SSH-'
-          puts "Client header: #{data}"
+          @client_version = data.chomp
+          puts "[RECV] Client header: #{@client_version}"
         else
           packet = Packet.new(data, @mac.length)
           @mac   = packet.mac.to_s
