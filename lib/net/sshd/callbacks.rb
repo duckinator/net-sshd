@@ -97,7 +97,7 @@ class Net::SSHD::Callbacks
 
   on KEX_DH_GEX_INIT do |packet|
     e = packet.read_bignum
-    @dh_secret = @dh.compute_key(e)
+    @dh_secret = OpenSSL::BN.new(@dh.compute_key(e), 2)
 
     hash_in = [
       :string, @client_version,
@@ -109,7 +109,7 @@ class Net::SSHD::Callbacks
 
       :bignum, e,
       :bignum, @dh.pub_key,
-      :bignum, OpenSSL::BN.new(@dh_secret, 2),
+      :bignum, @dh_secret,
     ]
 
     sha = OpenSSL::Digest::SHA256.new
@@ -122,12 +122,12 @@ class Net::SSHD::Callbacks
       :string,  sign_buffer(@session),
     )
   end
-=begin
+
   on NEWKEYS do |packet|
     send_packet(:byte, 21)
     @keyson = true
 
-    keysize = lambda do |salt|
+    keyize = lambda do |salt|
       # TODO: @dh_secret might need to be encoded for SSH
       sha = OpenSSL::Digest::SHA256.new
       sha <<  build_packet(
@@ -139,9 +139,16 @@ class Net::SSHD::Callbacks
       sha
     end
 
-    #...
+    #p keyize.('C').digest('hex')
+
+    @mac_length = 16
+
+    @deciph = Net::SSH::Transport::CipherFactory.get('aes256-ctr', key: keyize.('C').digest, iv: keyize.('A').digest[0...@mac_length])
+    @cipher = Net::SSH::Transport::CipherFactory.get('aes256-ctr', key: keyize.('D').digest, iv: keyize.('B').digest[0...@mac_length], encrypt: true)
+        
+    @macC = keyize.('E').digest
+    @macS = keyize.('F').digest
   end
-=end
 
 #  on SERVICE_REQUEST do |packet|
     
