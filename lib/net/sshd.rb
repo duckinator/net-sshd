@@ -27,6 +27,8 @@ module Net
         @command = nil
         @keyson = false
 
+        @mac_length = 0
+
         super(*args)
         Callbacks.handle(self, nil, :connect)
       end
@@ -66,7 +68,7 @@ module Net
                     :raw,  @mac,
                   )
 
-        packet = Packet.new(buffer.content, @mac.length) # This is a bit of a hack, but oh well.
+        packet = Packet.new(buffer.content, @mac_length) # This is a bit of a hack, but oh well.
         puts "[SEND] Type #{packet.type} - #{payload.length} bytes"
         send_data(buffer.content)
       end
@@ -82,7 +84,7 @@ module Net
           @client_version = data.chomp
           puts "[RECV] Client header: #{@client_version}"
         else
-          packet = Packet.new(data, @mac.length)
+          packet = Packet.new(data, @mac_length)
           @mac   = packet.mac.to_s
           puts "[RECV] Type #{packet.type} - #{packet.content.length} bytes"
           Callbacks.handle(self, packet)
