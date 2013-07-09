@@ -112,7 +112,7 @@ class Net::SSHD::Callbacks
       :bignum, OpenSSL::BN.new(@dh_secret, 2),
     ]
 
-    sha = OpenSSL::Digest::SHA1.new
+    sha = OpenSSL::Digest::SHA256.new
     @session = sha.digest(build_packet(*hash_in))
 
     send_packet(
