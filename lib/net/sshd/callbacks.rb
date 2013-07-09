@@ -129,8 +129,13 @@ class Net::SSHD::Callbacks
 
     keysize = lambda do |salt|
       # TODO: @dh_secret might need to be encoded for SSH
-      sha = OpenSSL::Diget::SHA256.new
-      sha << build_packet(:bignum, @dh_secret) + @session + salt + @session
+      sha = OpenSSL::Digest::SHA256.new
+      sha <<  build_packet(
+                :bignum, @dh_secret,
+                :string, @session,
+                :string, salt,
+                :string, @session,
+              )
       sha
     end
 
