@@ -37,7 +37,7 @@ module Net
 
       def sign_buffer(buffer)
         signer = OpenSSL::PKey::RSA.new(@hostkey)
-        signature = signer.public_encrypt(buffer)
+        signature = signer.ssh_do_sign(buffer)
         build_packet(:string, 'ssh-rsa', :string, signature)
       end
 
