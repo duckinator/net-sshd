@@ -34,7 +34,7 @@ class Net::SSHD::Callbacks
       firstKexFollows: false,
     }
 
-    send_packet(
+    response = [
       :byte,       KEXINIT,
       :raw,        @server_kex[:cookie],
       :string,     @server_kex[:kexAlgs],
@@ -49,7 +49,10 @@ class Net::SSHD::Callbacks
       :string,     @server_kex[:langs][:server2client].join(','),
       :bool,       @server_kex[:firstKexFollows],
       :long,       0, # Reserved (supposed to be 0)
-    )
+    ]
+
+    @server_algorithm_packet = build_packet(*response)
+    send_packet(*response)
   end
 
   on DISCONNECT do |packet|
@@ -59,6 +62,8 @@ class Net::SSHD::Callbacks
   end
 
   on KEXINIT do |packet|
+    @client_algorithm_packet = packet.payload[0..-2]
+
     @client_kex = {
       cookie:      packet.read(16),
       kexAlgs:     packet.read_list,
@@ -78,14 +83,14 @@ class Net::SSHD::Callbacks
       max:  packet.read_long
     }
 
-    @dh = OpenSSL::PKey::DH.new#(Net::SSHD::Groups::MODP2, 2)
+    @dh = OpenSSL::PKey::DH.new
     @dh.p = OpenSSL::BN.new(Net::SSHD::Groups::MODP2, 2)
     @dh.g = 2
 
     send_packet(
       :byte,   KEX_DH_REPLY,
       :bignum, @dh.p,
-      :bignum, OpenSSL::BN.new("2"),
+      :bignum, OpenSSL::BN.new(@dh.g.to_s),
     )
     @dh.generate_key!
   end
@@ -95,14 +100,20 @@ class Net::SSHD::Callbacks
     @dh_secret = @dh.compute_key(e)
 
     hash_in = [
+      :string, @client_version,
+      :string, Net::SSHD::PROTO_VERSION,
+      :string, @client_algorithm_packet,
+      :string, @server_algorithm_packet,
+
+      :string, @hostkey_pub,
+
       :bignum, e,
-      :bignum, OpenSSL::BN.new(@dh.public_key.to_der),
+      :bignum, @dh.pub_key,
       :bignum, OpenSSL::BN.new(@dh_secret, 2),
     ]
 
-    sha = OpenSSL::Digest::SHA256.new
-    sha << build_packet(*hash_in)
-    @session = sha.digest
+    sha = OpenSSL::Digest::SHA1.new
+    @session = sha.digest(build_packet(*hash_in))
 
     send_packet(
       :byte,    KEX_DH_GEX_REPLY,
