@@ -100,16 +100,22 @@ class Net::SSHD::Callbacks
     @dh_secret = OpenSSL::BN.new(@dh.compute_key(e), 2)
 
     hash_in = [
-      :string, @client_version,
-      :string, Net::SSHD::PROTO_VERSION,
-      :string, @client_algorithm_packet,
-      :string, @server_algorithm_packet,
+      :string,  @client_version,
+      :string,  Net::SSHD::PROTO_VERSION,
+      :string,  @client_algorithm_packet,
+      :string,  @server_algorithm_packet,
+      :string,  @hostkey_pub,
 
-      :string, @hostkey_pub,
+      :long,    @dhflags[:min],
+      :long,    @dhflags[:n],
+      :long,    @dhflags[:max],
 
-      :bignum, e,
-      :bignum, @dh.pub_key,
-      :bignum, @dh_secret,
+      :bignum,  @dh.p,
+      :bignum,  @dh.g,
+
+      :bignum,  e,
+      :bignum,  @dh.pub_key,
+      :bignum,  @dh_secret,
     ]
 
     sha = OpenSSL::Digest::SHA256.new
