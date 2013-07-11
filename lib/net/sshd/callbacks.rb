@@ -130,7 +130,6 @@ class Net::SSHD::Callbacks
   end
 
   on NEWKEYS do |packet|
-    send_packet(:byte, 21)
     @keyson = true
 
     keyize = lambda do |salt|
@@ -145,15 +144,44 @@ class Net::SSHD::Callbacks
       sha
     end
 
-    #p keyize.('C').digest('hex')
+    @digester = OpenSSL::Digest::SHA256
+
+    key = Proc.new do |salt|
+      @digester.digest(build_packet(
+        :bignum, @dh_secret,
+        :string, @session,
+        :string, salt,
+        :string, @session,
+      ))
+    end
+
+    hash = packet.payload
+puts "hash: #{hash.inspect}"
+    @deciph = Net::SSH::Transport::CipherFactory.get(
+                'aes256-ctr',
+                key: key['C'],
+                iv: key['A'][0...16],
+                digester: @digester,
+                shared: @session,
+                hash: hash,
+              )
+
+    @cipher = Net::SSH::Transport::CipherFactory.get(
+                'aes256-ctr',
+                key: key['D'],
+                iv: key['B'][0...16],
+                digester: @digester,
+                shared: @session,
+                hash: hash,
+                encrypt: true
+              )
+
+    @macC = key['E']
+    @macS = key['F']
 
     @mac_length = 16
 
-    @deciph = Net::SSH::Transport::CipherFactory.get('aes256-ctr', key: keyize.('C').digest, iv: keyize.('A').digest[0...@mac_length])
-    @cipher = Net::SSH::Transport::CipherFactory.get('aes256-ctr', key: keyize.('D').digest, iv: keyize.('B').digest[0...@mac_length], encrypt: true)
-        
-    @macC = keyize.('E').digest
-    @macS = keyize.('F').digest
+    send_packet(:byte, 21)
   end
 
 #  on SERVICE_REQUEST do |packet|
